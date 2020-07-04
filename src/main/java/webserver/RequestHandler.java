@@ -25,11 +25,12 @@ public class RequestHandler extends Thread {
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             String requestUrl = readRequestLine(br);
-            printHeaders(br, requestUrl);
+            assert requestUrl != null;
+            readHeaders(br, requestUrl);
 
             DataOutputStream dos = new DataOutputStream(out);
             byte[] body = Files.readAllBytes(new File(DIRECTORY + requestUrl).toPath());
-            response200Header(dos, body.length);
+            response200Header(dos, body.length, requestUrl);
             responseBody(dos, body);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -40,14 +41,14 @@ public class RequestHandler extends Thread {
         String line = br.readLine();
         log.info("request line : {}", line);
         if (line == null) {
-            throw new RuntimeException("connection exception happen");
+            return null;
         }
         String requestUrl = line.split(" ")[1];
         String index = "/index.html";
         return requestUrl.equals("/") ? index : requestUrl;
     }
 
-    private void printHeaders(BufferedReader br, String line) throws IOException {
+    private void readHeaders(BufferedReader br, String line) throws IOException {
         while (!line.equals("")) {
             line = br.readLine();
             log.info("header : {}", line);
@@ -55,10 +56,16 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
+    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String requestUrl) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            String[] split = requestUrl.split("/");
+            boolean isStaticRequest = false;
+            if (split.length >= 2) {
+                isStaticRequest = split[1].equals("css");
+            }
+            String contentType = isStaticRequest? "text/css" : "text/html";
+            dos.writeBytes(String.format("Content-Type: %s;charset=utf-8\r\n", contentType));
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
