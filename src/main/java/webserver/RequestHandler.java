@@ -3,9 +3,12 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Map;
 
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.HttpRequestUtils;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -25,7 +28,8 @@ public class RequestHandler extends Thread {
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             String requestUrl = readRequestLine(br);
-            assert requestUrl != null;
+            if (requestUrl == null) return;
+            if (requestUrl.equals("/user/create")) userMapping(requestUrl);
             readHeaders(br, requestUrl);
 
             DataOutputStream dos = new DataOutputStream(out);
@@ -35,6 +39,11 @@ public class RequestHandler extends Thread {
         } catch (IOException e) {
             log.error(e.getMessage());
         }
+    }
+
+
+    protected User userMapping(String requestUrl) {
+        return UserMapper.userMapping(requestUrl);
     }
 
     private String readRequestLine(BufferedReader br) throws IOException {
@@ -64,7 +73,7 @@ public class RequestHandler extends Thread {
             if (split.length >= 2) {
                 isStaticRequest = split[1].equals("css");
             }
-            String contentType = isStaticRequest? "text/css" : "text/html";
+            String contentType = isStaticRequest ? "text/css" : "text/html";
             dos.writeBytes(String.format("Content-Type: %s;charset=utf-8\r\n", contentType));
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
