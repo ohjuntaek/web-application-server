@@ -3,12 +3,12 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.Map;
+import java.util.Optional;
 
 import model.User;
+import org.javatuples.LabelValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.HttpRequestUtils;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -26,11 +26,7 @@ public class RequestHandler extends Thread {
                 connection.getPort());
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-            String requestUrl = readRequestLine(br);
-            if (requestUrl == null) return;
-            if (requestUrl.equals("/user/create")) userMapping(requestUrl);
-            readHeaders(br, requestUrl);
+            String requestUrl = processInputRequest(in);
 
             DataOutputStream dos = new DataOutputStream(out);
             byte[] body = Files.readAllBytes(new File(DIRECTORY + requestUrl).toPath());
@@ -41,20 +37,51 @@ public class RequestHandler extends Thread {
         }
     }
 
+    private String processInputRequest(InputStream in) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
-    protected User userMapping(String requestUrl) {
-        return UserMapper.userMapping(requestUrl);
+        String requestUrl = readRequestLine(br).orElseThrow(IOException::new);
+
+        String[] hostAndParams = splitUrl(requestUrl).orElseGet(() -> new String[] {});
+
+        if (hostAndParams.length == 2) {
+            modelMapping(hostAndParams[0], hostAndParams[1]);
+        }
+
+        readHeaders(br, requestUrl);
+
+        return requestUrl;
     }
 
-    private String readRequestLine(BufferedReader br) throws IOException {
+    protected Optional<String[]> splitUrl(String requestUrl) {
+        String[] split = requestUrl.split("\\?");
+        if (split.length != 2) {
+            return Optional.empty();
+        }
+        String host = split[0];
+        String queryParams = split[1];
+        return Optional.of(new String[] {host, queryParams});
+    }
+
+
+    protected Object modelMapping(String host, String queryParams) {
+        if (host.equals("/user/create")) {
+            User user = ModelMapper.userMapping(queryParams);
+            log.info("user create : {}" , user);
+            return user;
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> readRequestLine(BufferedReader br) throws IOException {
         String line = br.readLine();
         log.info("request line : {}", line);
         if (line == null) {
-            return null;
+            return Optional.empty();
         }
         String requestUrl = line.split(" ")[1];
         String index = "/index.html";
-        return requestUrl.equals("/") ? index : requestUrl;
+        return Optional.of(requestUrl.equals("/") ? index : requestUrl);
     }
 
     private void readHeaders(BufferedReader br, String line) throws IOException {
