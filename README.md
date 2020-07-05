@@ -1,14 +1,3 @@
-# 실습을 위한 개발 환경 세팅
-* https://github.com/slipp/web-application-server 프로젝트를 자신의 계정으로 Fork한다. Github 우측 상단의 Fork 버튼을 클릭하면 자신의 계정으로 Fork된다.
-* Fork한 프로젝트를 eclipse 또는 터미널에서 clone 한다.
-* Fork한 프로젝트를 eclipse로 import한 후에 Maven 빌드 도구를 활용해 eclipse 프로젝트로 변환한다.(mvn eclipse:clean eclipse:eclipse)
-* 빌드가 성공하면 반드시 refresh(fn + f5)를 실행해야 한다.
-
-# 웹 서버 시작 및 테스트
-* webserver.WebServer 는 사용자의 요청을 받아 RequestHandler에 작업을 위임하는 클래스이다.
-* 사용자 요청에 대한 모든 처리는 RequestHandler 클래스의 run() 메서드가 담당한다.
-* WebServer를 실행한 후 브라우저에서 http://localhost:8080으로 접속해 "Hello World" 메시지가 출력되는지 확인한다.
-
 # 각 요구사항별 학습 내용 정리
 * 구현 단계에서는 각 요구사항을 구현하는데 집중한다. 
 * 구현을 완료한 후 구현 과정에서 새롭게 알게된 내용, 궁금한 내용을 기록한다.
@@ -47,3 +36,17 @@
 
 ### heroku 서버에 배포 후
 * 
+
+---
+
+## 우테코프리코스 조건 등
+
+- 자바 코드 컨벤션을 지키면서 프로그래밍한다. https://myeonguni.tistory.com/1596
+- indent(들여쓰기) depth를 3이 넘지 않도록 구현한다. 2까지 허용한다.
+- 함수(또는 메소드)가 한 가지 일만 하도록 최대한 작게 만들어라.
+- 함수(또는 메소드)의 길이가 10라인을 넘어가지 않도록 구현한다.
+- indent(들여쓰기) depth를 2가 넘지 않도록 구현한다. 1까지만 허용한다.
+- 함수(또는 메소드)의 인자 수를 3개가지만 허용한다. 4개 이상은 허용하지 않는다.
+
+- [클린코드](https://github.com/Yooii-Studios/Clean-Code/blob/master/Chapter%2010%20-%20%ED%81%B4%EB%9E%98%EC%8A%A4.md)
+
